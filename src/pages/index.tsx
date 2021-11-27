@@ -1,4 +1,4 @@
-import { GetStaticProps, GetStaticPaths } from 'next';
+import { GetStaticProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 import Prismic from '@prismicio/client';
@@ -11,6 +11,7 @@ import { FiCalendar, FiUser } from 'react-icons/fi';
 
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
+import { useState } from 'react';
 
 interface Post {
   uid?: string;
@@ -32,21 +33,31 @@ interface HomeProps {
 }
 
 export default function Home({ postsPagination }: HomeProps) {
+  const [posts, setPosts] = useState(postsPagination.results);
+  const [nextPage, setNextPage] = useState(postsPagination.next_page);
+
+  async function handleLoadMorePosts() {
+    if (nextPage === null) {
+      return;
+    }
+
+    const responseNextPage = await fetch(`${nextPage}`).then(response =>
+      response.json()
+    );
+
+    setNextPage(responseNextPage.next_page);
+    setPosts([...posts, ...responseNextPage.results]);
+  }
+
   return (
     <>
       <Head>
         <title>Home | spacetraveling</title>
       </Head>
 
-      <header className={styles.headerContainer}>
-        <div className={styles.headerContent}>
-          <img src="/images/logo.svg" alt="logo" />
-        </div>
-      </header>
-
       <main className={styles.mainContainer}>
         <div className={styles.posts}>
-          {postsPagination.results.map(post => (
+          {posts.map(post => (
             <Link key={post.uid} href={`/post/${post.uid}`}>
               <a>
                 <strong>{post.data.title}</strong>
@@ -73,19 +84,16 @@ export default function Home({ postsPagination }: HomeProps) {
             </Link>
           ))}
 
-          <p>Carregar mais posts</p>
+          {nextPage && (
+            <button type="button" onClick={handleLoadMorePosts}>
+              Carregar mais posts
+            </button>
+          )}
         </div>
       </main>
     </>
   );
 }
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  return {
-    paths: [],
-    fallback: 'blocking',
-  };
-};
 
 export const getStaticProps: GetStaticProps = async () => {
   const prismic = getPrismicClient();
@@ -94,11 +102,15 @@ export const getStaticProps: GetStaticProps = async () => {
     [Prismic.Predicates.at('document.type', 'posts')],
     {
       fetch: ['publication.title', 'publication.content'],
-      pageSize: 100,
+      pageSize: 2,
+      orderings: '[document.last_publication_date desc]',
     }
   );
 
-  const postsPagination = postsResponse;
+  const postsPagination = {
+    next_page: postsResponse.next_page,
+    results: postsResponse.results,
+  };
 
   return {
     props: {

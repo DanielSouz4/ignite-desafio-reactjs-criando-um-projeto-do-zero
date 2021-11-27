@@ -1,17 +1,17 @@
 .header {
-  height: 105px;
+  height: 6.5rem;
+}
 
-  a {
-    display: block;
-    max-width: 1120px;
-    height: inherit;
-    margin: auto;
+.content {
+  display: block;
+  max-width: 1120px;
+  height: inherit;
+  margin: auto;
 
-    img {
-      display: inline;
-      margin-left: 210px;
-      margin-top: 40px;
-      margin-bottom: 39.3px;
-    }
+  img {
+    display: inline;
+    margin-left: 13.125rem;
+    margin-top: 2.5rem;
+    margin-bottom: 2.456rem;
   }
 }
