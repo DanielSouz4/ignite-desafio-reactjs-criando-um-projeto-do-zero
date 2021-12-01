@@ -11,9 +11,11 @@ import Prismic from '@prismicio/client';
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 interface Post {
   first_publication_date: string | null;
+  last_publication_date: string | null;
   data: {
     title: string;
     banner: {
@@ -34,6 +36,18 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps) {
+  useEffect(() => {
+    let script = document.createElement('script');
+    let anchor = document.getElementById('inject-comments-for-uterances');
+    script.setAttribute('src', 'https://utteranc.es/client.js');
+    script.setAttribute('crossorigin', 'anonymous');
+    script.setAttribute('async', true);
+    script.setAttribute('repo', 'DanielSouz4/spacetraveling-comments');
+    script.setAttribute('issue-term', 'pathname');
+    script.setAttribute('theme', 'photon-dark');
+    anchor.appendChild(script);
+  }, []);
+
   const router = useRouter();
 
   if (router.isFallback) {
@@ -66,24 +80,24 @@ export default function Post({ post }: PostProps) {
           <h1>{post.data.title}</h1>
 
           <div className={styles.info}>
-            <time>
-              <FiCalendar />
-              <span>
-                {format(new Date(post.first_publication_date), 'd LLL y', {
-                  locale: ptBR,
-                })}
-              </span>
-            </time>
+            <div>
+              <time>
+                <FiCalendar />
+                <span>{post.first_publication_date}</span>
+              </time>
 
-            <p className={styles.author}>
-              <FiUser />
-              <span>{post.data.author}</span>
-            </p>
+              <p className={styles.author}>
+                <FiUser />
+                <span>{post.data.author}</span>
+              </p>
 
-            <p className={styles.estimatedTime}>
-              <FiClock />
-              <span>{`${estimatedReadingTime}`} min</span>
-            </p>
+              <p className={styles.estimatedTime}>
+                <FiClock />
+                <span>{`${estimatedReadingTime}`} min</span>
+              </p>
+            </div>
+
+            <i>{post.last_publication_date}</i>
           </div>
 
           {post.data.content.map(content => (
@@ -98,6 +112,25 @@ export default function Post({ post }: PostProps) {
           ))}
         </article>
       </main>
+      <footer className={styles.footerContainer}>
+        <div className={styles.divider}></div>
+        <div className={styles.navegation}>
+          <div className={styles.postAnterior}>
+            <strong>Como utilizar Hooks</strong>
+            <a href="#">Post anterior</a>
+          </div>
+
+          <div className={styles.proximoPost}>
+            <strong>Criando um app CRA do Zero</strong>
+            <a href="#">Próximo post</a>
+          </div>
+        </div>
+        <div
+          className={styles.commments}
+          id="inject-comments-for-uterances"
+        ></div>
+        <button className={styles.preview}>Sair do modo Preview</button>
+      </footer>
     </>
   );
 }
@@ -129,7 +162,20 @@ export const getStaticProps: GetStaticProps = async context => {
 
   const post = {
     uid: response.uid,
-    first_publication_date: response.first_publication_date,
+    first_publication_date: format(
+      new Date(response.first_publication_date),
+      'd LLL y',
+      {
+        locale: ptBR,
+      }
+    ),
+    last_publication_date: format(
+      new Date(response.last_publication_date),
+      "'* editado em ' d LLL y', às' p",
+      {
+        locale: ptBR,
+      }
+    ),
     data: {
       title: response.data.title,
       subtitle: response.data.subtitle,
