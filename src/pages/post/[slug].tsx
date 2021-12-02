@@ -35,9 +35,23 @@ interface Post {
 interface PostProps {
   post: Post;
   preview: boolean;
+  navegation: {
+    prevPost: {
+      uid: string;
+      data: {
+        title: string;
+      };
+    }[];
+    nextPost: {
+      uid: string;
+      data: {
+        title: string;
+      };
+    }[];
+  };
 }
 
-export default function Post({ post, preview }: PostProps) {
+export default function Post({ post, preview, navegation }: PostProps) {
   const router = useRouter();
 
   if (router.isFallback) {
@@ -87,7 +101,9 @@ export default function Post({ post, preview }: PostProps) {
               </p>
             </div>
 
-            <i>{post.last_publication_date}</i>
+            {post.first_publication_date !== post.last_publication_date && (
+              <i>{post.last_publication_date}</i>
+            )}
           </div>
 
           {post.data.content.map(content => (
@@ -104,16 +120,21 @@ export default function Post({ post, preview }: PostProps) {
       </main>
       <footer className={styles.footerContainer}>
         <div className={styles.divider}></div>
-        <div className={styles.navegation}>
-          <div className={styles.postAnterior}>
-            <strong>Como utilizar Hooks</strong>
-            <a href="#">Post anterior</a>
-          </div>
 
-          <div className={styles.proximoPost}>
-            <strong>Criando um app CRA do Zero</strong>
-            <a href="#">Próximo post</a>
-          </div>
+        <div className={styles.navegation}>
+          {navegation?.prevPost.length > 0 && (
+            <div className={styles.postAnterior}>
+              <strong>{navegation.prevPost[0].data.title}</strong>
+              <a href={`/post/${navegation.prevPost[0].uid}`}>Post anterior</a>
+            </div>
+          )}
+
+          {navegation.nextPost.length > 0 && (
+            <div className={styles.proximoPost}>
+              <strong>{navegation.nextPost[0].data.title}</strong>
+              <a href={`/post/${navegation.nextPost[0].uid}`}>Próximo post</a>
+            </div>
+          )}
         </div>
 
         <Comments />
@@ -161,6 +182,24 @@ export const getStaticProps: GetStaticProps = async ({
     ref: previewData?.ref ?? null,
   });
 
+  const prevPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.first_publication_date]',
+    }
+  );
+
+  const nextPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.last_publication_date desc]',
+    }
+  );
+
   const post = {
     uid: response.uid,
     first_publication_date: format(
@@ -197,6 +236,10 @@ export const getStaticProps: GetStaticProps = async ({
     props: {
       post,
       preview,
+      navegation: {
+        prevPost: prevPost?.results,
+        nextPost: nextPost?.results,
+      },
     },
     revalidate: 60 * 30, // 30 minutes
   };

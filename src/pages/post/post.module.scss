@@ -185,8 +185,11 @@
         letter-spacing: -0.5px;
         color: var(--highlight);
         margin-top: 0.5rem;
-        align-self: flex-end;
       }
+    }
+
+    div + div {
+      text-align: right;
     }
   }
 
