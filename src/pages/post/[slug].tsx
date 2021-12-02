@@ -1,4 +1,5 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
+import Link from 'next/link';
 
 import { getPrismicClient } from '../../services/prismic';
 import { RichText } from 'prismic-dom';
@@ -33,15 +34,16 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  preview: boolean;
 }
 
-export default function Post({ post }: PostProps) {
+export default function Post({ post, preview }: PostProps) {
   useEffect(() => {
     let script = document.createElement('script');
     let anchor = document.getElementById('inject-comments-for-uterances');
     script.setAttribute('src', 'https://utteranc.es/client.js');
     script.setAttribute('crossorigin', 'anonymous');
-    script.setAttribute('async', true);
+    script.setAttribute('async', 'true');
     script.setAttribute('repo', 'DanielSouz4/spacetraveling-comments');
     script.setAttribute('issue-term', 'pathname');
     script.setAttribute('theme', 'photon-dark');
@@ -129,7 +131,14 @@ export default function Post({ post }: PostProps) {
           className={styles.commments}
           id="inject-comments-for-uterances"
         ></div>
-        <button className={styles.preview}>Sair do modo Preview</button>
+
+        {preview && (
+          <aside className={styles.preview}>
+            <Link href="/api/exit-preview">
+              <a>Sair do modo Preview</a>
+            </Link>
+          </aside>
+        )}
       </footer>
     </>
   );
@@ -153,12 +162,18 @@ export const getStaticPaths: GetStaticPaths = async () => {
   };
 };
 
-export const getStaticProps: GetStaticProps = async context => {
-  const { slug } = context.params;
+export const getStaticProps: GetStaticProps = async ({
+  params,
+  preview = false,
+  previewData,
+}) => {
+  const { slug } = params;
 
   const prismic = getPrismicClient();
 
-  const response = await prismic.getByUID('posts', String(slug), {});
+  const response = await prismic.getByUID('posts', String(slug), {
+    ref: previewData?.ref ?? null,
+  });
 
   const post = {
     uid: response.uid,
@@ -195,6 +210,7 @@ export const getStaticProps: GetStaticProps = async context => {
   return {
     props: {
       post,
+      preview,
     },
     revalidate: 60 * 30, // 30 minutes
   };

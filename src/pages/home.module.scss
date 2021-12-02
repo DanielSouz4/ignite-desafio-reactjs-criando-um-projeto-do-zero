@@ -87,3 +87,21 @@
     margin-top: 4rem;
   }
 }
+
+.preview {
+  margin: 5.5rem auto 6.625rem;
+
+  max-width: 700px;
+  height: 3.625rem;
+  background: var(--heading);
+  border-radius: 0.25rem;
+
+  text-align: center;
+
+  a {
+    font-weight: 600;
+    font-size: 1.125rem;
+    line-height: 3.625rem;
+    color: var(--background);
+  }
+}
