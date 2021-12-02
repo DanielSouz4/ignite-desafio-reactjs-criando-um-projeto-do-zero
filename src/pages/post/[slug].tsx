@@ -1,5 +1,6 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Link from 'next/link';
+import { Comments } from '../../components/Comments';
 
 import { getPrismicClient } from '../../services/prismic';
 import { RichText } from 'prismic-dom';
@@ -12,7 +13,6 @@ import Prismic from '@prismicio/client';
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
 
 interface Post {
   first_publication_date: string | null;
@@ -38,18 +38,6 @@ interface PostProps {
 }
 
 export default function Post({ post, preview }: PostProps) {
-  useEffect(() => {
-    let script = document.createElement('script');
-    let anchor = document.getElementById('inject-comments-for-uterances');
-    script.setAttribute('src', 'https://utteranc.es/client.js');
-    script.setAttribute('crossorigin', 'anonymous');
-    script.setAttribute('async', 'true');
-    script.setAttribute('repo', 'DanielSouz4/spacetraveling-comments');
-    script.setAttribute('issue-term', 'pathname');
-    script.setAttribute('theme', 'photon-dark');
-    anchor.appendChild(script);
-  }, []);
-
   const router = useRouter();
 
   if (router.isFallback) {
@@ -127,10 +115,8 @@ export default function Post({ post, preview }: PostProps) {
             <a href="#">Próximo post</a>
           </div>
         </div>
-        <div
-          className={styles.commments}
-          id="inject-comments-for-uterances"
-        ></div>
+
+        <Comments />
 
         {preview && (
           <aside className={styles.preview}>
